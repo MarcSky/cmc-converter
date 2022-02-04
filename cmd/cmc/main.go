@@ -39,8 +39,7 @@ func main() {
 	cmcSvc := cmc.NewCMC(cmcToken)
 	converter := usecase.NewConv(cmcSvc)
 
-	converterWithInterest := usecase.NewConvWithInterest(converter, rate)
-	res, err := converterWithInterest.Converter(context.Background(), v, from, to)
+	res, err := converter.Converter(context.Background(), v, from, to)
 	if err != nil {
 		panic(err)
 	}
