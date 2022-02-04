@@ -1,35 +1,35 @@
 package cmc
 
 import (
+	"cmcconv/internal"
 	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 )
 
 const (
 	apiURL = "https://pro-api.coinmarketcap.com/v1/tools/price-conversion?amount=%s&symbol=%s&convert=%s"
 )
 
-type CmcSvc interface {
-	Convert(ctx context.Context, amount, from, to string) (float64, error)
-}
-
 type api struct {
 	cmcToken string
 	client   *http.Client
 }
 
-func NewCMC(cmcToken string) CmcSvc {
+func NewCMC(cmcToken string) internal.ConverterClient {
 	return &api{
 		cmcToken: cmcToken,
-		client:   &http.Client{},
+		client: &http.Client{
+			Timeout: 10 * time.Second,
+		},
 	}
 }
 
-func (c *api) reqConvert(ctx context.Context, amount, from, to string) (float64, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf(apiURL, amount, from, to), http.NoBody)
+func (c *api) reqConvert(amount, from, to string) (float64, error) {
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, fmt.Sprintf(apiURL, amount, from, to), http.NoBody)
 	if err != nil {
 		return 0.0, err
 	}
@@ -59,6 +59,6 @@ func (c *api) reqConvert(ctx context.Context, amount, from, to string) (float64,
 	return result.Data.Quotes[to].Price, nil
 }
 
-func (c *api) Convert(ctx context.Context, amount, from, to string) (float64, error) {
-	return c.reqConvert(ctx, amount, from, to)
+func (c *api) Converter(amount, from, to string) (float64, error) {
+	return c.reqConvert(amount, from, to)
 }
